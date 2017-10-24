@@ -1,0 +1,203 @@
+#+title: PC5215, Lab1
+#+author: Tiankai Xiong
+#+options: toc:nil
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER: \usepackage{tabularx,graphicx,ragged2e,booktabs,caption,float}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{gensymb}
+#+LATEX_HEADER: \usepackage{authblk}
+#+LATEX_HEADER: \setlength{\parskip}{0.2cm}
+#+LATEX_HEADER: \setlength{\parindent}{0.85cm}
+
+
+* Question 1
+
+** Elaboration
+
+   Instead of copying everything from /Numerical Recipes/,
+   =ludcmp= was rewritten with modifications such that it no
+   longer needs a =struct= to begin with. Simple functions such
+   as =double **initMat(int n)= are written to avoid repeated
+   work in creating square matrices.
+
+   In addition, to force =ludcmp= to decompose without pivoting, a
+   parameter =noPivot= is added so that when it is nonzero, =ludcmp= skip
+   the part where it swaps rows in the matrix.
+
+   The function =ludcmp= follows Crout's algorithm where the diagonal of
+   =L= is taken as 1 such that for an $N \times N$ matrix, we only have
+   $N^2 - N$ variables to be determined while $N^2$ equations are
+   available. The algorithm iterates from left to right, top to
+   bottom. The results are stored in the original matrix because
+   whenever a new value is determined on a certain site, the old value
+   will not be used anymore. The result matrix $A$ is such that the
+   lower triangle part(without the diagonal) are values for L while
+   the upper diagonal part with the diagonal are values for U.
+
+   After the LU decomposition is determined, we use =lubksb= to solve
+   the linear system $Ax = b$ with $b$ given. Since we have $A = LU$,
+   the problem can be separated into two steps i.e.
+
+   $$L U x = b$$
+   $$L (U x) = b$$
+   $$L y = b$$
+   $$U x = y$$
+
+   where we solve for $y$ first, then $x$. It is worth mentioning that
+   =noPivot= parameter is also added for =ludksb= otherwise it will take
+   the =indx= array which stores the row permutations and reverse the
+   work accordingly.
+
+** Results
+
+   Result from executing the compiled source code of
+   =lab1_1.c= is presented in Fig \ref{fig:result1-1} which is
+   verified in Matlab as shown in Fig \ref{fig:matlab1} and Fig
+   \ref{fig:matlab2}. The answer to Q1 up to 6 digits is:
+   $$x = -0.214439$$
+   $$y = -1.265114$$
+   $$z = -0.536490$$
+   $$w = -1.123851$$
+
+   #+BEGIN_SRC latex
+     \begin{figure}
+       \centering
+       \includegraphics[width=0.6\textwidth]{result1-1.png}
+       \caption{Result for Question 1}
+       \label{fig:result1-1}
+     \end{figure}
+
+
+   #+END_SRC
+
+   #+BEGIN_SRC latex
+     \begin{figure}
+       \centering
+       \includegraphics[width=0.6\textwidth]{matlab1.png}
+       \caption{Verification of LU = A in Matlab}
+       \label{fig:matlab1}
+     \end{figure}
+   #+END_SRC
+
+   #+BEGIN_SRC latex
+     \begin{figure}
+       \centering
+       \includegraphics[width=0.6\textwidth]{matlab2.png}
+       \caption{Verification of Ax = b in Matlab}
+       \label{fig:matlab2}
+     \end{figure}
+   #+END_SRC
+
+
+* Question 2
+
+** Elaboration
+
+- Calculating I and R
+
+   The problem is approached by setting the voltage at each node as a
+   variable to be determined. For any L, we have in total $(L + 1)^2$
+   nodes. For each node, we can use conservation of current to
+   generate a equation. By having the same number of equations as
+   unknowns, this linear system has a unique solution if the equations
+   are independent and the matrix is not singular.
+
+   The difficulty lies in the indexing of all the nodes i.e. to write
+   down the $(L+1)^2 \times (L+1)^2$ matrix. We choose to flatten the
+   $(L+1) \times (L+1)$ nodes with indices =i= and =j=. To elaborate,
+   instead of indexing the $(L+1)^2 \times (L+1)^2$ matrix by two
+   indices each runs from 0 to $(L+1)^2 - 1$, we use =i= and =j= each runs
+   from 0 to L. The equation associated with a node originally on the
+   grid at =i,j= will be the row with row number $(L+1) \times i + j$. The
+   column numbers are used to denote the contribution of current from
+   each neighboring nodes, which can be indexed by =i= \to =i= $\pm$ =1= or
+   =j= \to =j= $\pm$ =1=. In code, we need to treat the odd points at the
+   corners and sides differently. This is rather trivial and is easily
+   understood from reading the source code.
+
+   Two nodes are special: A and B as indicated in the problem. As we
+  already know that V_A = 0 and V_B = 1, in the rows corresponding to
+  that node, we simply indicate only one contribution of current from
+  the node itself. In the result column vector b, we denote $b[0] = 0$
+  and $b[-1] = 1$ [fn:1] such that the solution is V_A = 0 and V_B
+  = 1. For all other entries of b, we put 0 as total current at each
+  intermediate node is zero.
+
+   Note that the contribution from each node must be multiplied by
+   $\sqrt{L}$ to take into account the resistance.
+
+   To calculate the total current, we only need the voltage from the
+   two neighboring nodes of A(or B) to calculate the two sources of
+   current and sum them up. The total resistance can be calculated by
+   $R = \frac{V}{I}$ accordingly.
+
+- Report calculation time
+
+  =time_t= from =time.h= library is used to record two instances at the
+  start and the end of the programme. The difference is calculated and
+  converted to ms.
+
+
+** Results
+
+   The results are presented in Table \ref{tbl:grid}. The processor
+   used is a 2.7GHz Intel Core i5. Since this programme is executed in
+   sequential, the number of cores does not matter. Answers for L = 1
+   and L = 2 are verified by hand.
+
+   #+CAPTION: Result from solving the grid with L.
+   #+Name: tbl:grid
+   #+ATTR_LATEX: :environment longtable :align |c|c|c|c|
+   |-----+----------------------+-------------------------+------------------|
+   |   L | Total current(units) | Total Resistance(units) | Time elapsed(ms) |
+   |-----+----------------------+-------------------------+------------------|
+   |   1 |             1.000000 |                1.000000 |               <1 |
+   |   2 |             0.942809 |                1.060660 |               <1 |
+   |   4 |             0.936170 |                1.068182 |               <1 |
+   |   8 |             0.982735 |                1.017568 |                1 |
+   |  16 |             1.085307 |                0.921398 |               30 |
+   |  32 |             1.248904 |                0.800702 |             1289 |
+   |  64 |             1.483576 |                0.674047 |            74562 |
+   | 128 |              aborted |                 aborted |          aborted |
+   |-----+----------------------+-------------------------+------------------|
+
+
+
+   For larger L such as L = 128, the matrix has $(128+1)^4 =
+   276,922,881$ entries, each is a =double= that occupies 16 bytes. That
+   alone would take in total more than 4GB of the memory. Note that
+   the size of the problem grows by $\approx (L+1)^2$ instead of
+   L. Since LU decomposition is a $\textit{O}(n^a) \; (a>2)$ process, the
+   computing time escalates very fast for large L.
+
+\pagebreak
+* SRC
+
+- =lab1_1.c=
+\hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat src/lab1_1.c
+  #+END_SRC
+\hline
+
+\pagebreak
+- =lab1_2.c=
+\hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat src/lab1_2.c
+  #+END_SRC
+\hline
+
+\pagebreak
+- =ludcmp.cpp=
+\hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat src/ludcmp.cpp
+  #+END_SRC
+\hline
+* Footnotes
+
+[fn:1] Here we use the python notation b[-1] which means the last
+element of the array b. In the actual c code, the index is directly keyed in.

@@ -1,0 +1,215 @@
+#+title: PC5215, Lab2
+#+author: Tiankai Xiong
+#+options: toc:nil
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER: \usepackage{tabularx,graphicx,ragged2e,booktabs,caption,float}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{gensymb}
+#+LATEX_HEADER: \usepackage{authblk}
+#+LATEX_HEADER: \setlength{\parskip}{0.2cm}
+#+LATEX_HEADER: \setlength{\parindent}{0.85cm}
+
+* Question 1
+
+  The results are presented in Figure \ref{fig:Q1}
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.6\textwidth]{Q1.pdf}
+      \caption{Interpolation by polint}
+      \label{fig:Q1}
+    \end{figure}
+  #+END_SRC
+* Question 2
+
+  Since the effect of using high precision is trivial, so is that of
+  $\epsilon$, we only test combinations of K and JMAX(Otherwise the
+  number of combinations will be huge). Here we always use double
+  precision, and let $EPS = 1.0^{-20}$
+
+   #+CAPTION: Result and discrepancy with different K and JMAX
+   #+Name: tbl:Q2
+   #+ATTR_LATEX: :environment longtable :align |c|c|c|c|c|
+   |----+------+-----------------------------------+-----------------------------------|
+   |  K | JMAX |                            double |                       discrepancy |
+   |----+------+-----------------------------------+-----------------------------------|
+   |  1 |   10 | 23.098167602860964819910805090331 | 14.944803483049799552873082575388 |
+   |  5 |   10 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   | 10 |   10 |  8.153364119811161714324043714441 | -0.000000000000003552713678800501 |
+   | 20 |   10 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   | 50 |   10 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   |----+------+-----------------------------------+-----------------------------------|
+   |  1 |   20 | 23.098167602860964819910805090331 | 14.944803483049799552873082575388 |
+   |  5 |   20 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   | 10 |   20 |  8.153364119811161714324043714441 | -0.000000000000003552713678800501 |
+   | 20 |   20 |  8.153364119811136845328292110935 | -0.000000000000028421709430404007 |
+   | 50 |   20 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   |----+------+-----------------------------------+-----------------------------------|
+   |  1 |   30 | 23.098167602860964819910805090331 | 14.944803483049799552873082575388 |
+   |  5 |   30 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   | 10 |   30 |  8.153364119811161714324043714441 | -0.000000000000003552713678800501 |
+   | 20 |   30 |  8.153364119811136845328292110935 | -0.000000000000028421709430404007 |
+   | 50 |   30 |  0.000000000000000000000000000000 | -8.153364119811165267037722514942 |
+   |----+------+-----------------------------------+-----------------------------------|
+
+   From Table \ref{tbl:Q2}, we can interpret that
+   1. At low values of K, the integral is very inaccurate. Clearly, if
+      we only use one point to extrapolate, the result has very little chance to be accurate.
+   2. Only a range of K give promising results.
+   3. The value of JMAX does not matter as long as it's not too small.
+
+   It is hard to explain why only a range of K give promising
+   results. It might be an error when we implemented the functions with
+   index starting from 0.
+
+   The most accurate result obtained is presented in Figure \ref{fig:Q2}
+
+   #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.6\textwidth]{Q2_best_result.png}
+      \caption{Best result obtained}
+      \label{fig:Q2}
+    \end{figure}
+  #+END_SRC
+
+* Question 2
+** Method
+
+   The Hamiltonian, which is provided in SI units, can be re-written
+   in atomic units:
+
+   #+BEGIN_SRC latex
+     \begin{equation}
+       \hat{H} = -\frac{1}{2}\nabla^2_1 - \frac{1}{2}\nabla^2_2 - \frac{1}{r_{A1}}
+       - \frac{1}{r_{B1}}  - \frac{1}{r_{A2}}  - \frac{1}{r_{B2}}  + \frac{1}{r_{12}}
+        + \frac{1}{r_{AB}}
+     \end{equation}
+   #+END_SRC
+
+   With the wave function given as:
+
+   #+BEGIN_SRC latex
+     \begin{equation}
+       \Psi(\vec{r_1}, \vec{r_2} = \phi(r_{A1}) \phi(r_{B2}) + \phi(r_{A2}) \phi(r_{B1})), \quad \phi(r) = e^{-r/a_0}
+     \end{equation}
+   #+END_SRC
+
+   We can calculate $\Psi \hat{H} \Psi$ on Mathematica which gives:
+
+   #+BEGIN_SRC latex
+     \begin{equation}
+       \Psi (e^{-r_{A2} - r_{B1}}(-1 + \frac{1}{r_{a2}} + \frac{1}{r_{b1}}) + e^{-r_{a1} - r_{b2}}(-1 + \frac{1}{r_{a1}} + \frac{1}{r_{b2}}) +
+       (-\frac{1}{r_{a1}} -\frac{1}{r_{b1}} -\frac{1}{r_{a2}} -\frac{1}{r_{b2}} +\frac{1}{r_{12}}  +\frac{1}{r_{ab}}  )*\psi)
+     \end{equation}
+   #+end_src
+
+   Where no conjugation is needed because the wave function and operators have only real components.
+
+   To find the total energy at given $r_{AB}$, we use MC Metropolis
+   algorithm. The probability of a combination of $\vec{r_1},
+   \vec{r_2}$, $P(\vec{r_1}, \vec{r_2})$ can be calculated by $\Psi
+   \Psi$. Despite not normalized, it does not affect the implementation of Metropolis algorithm.
+
+   The logic is as follows: at each step, we choose a random set of
+   $(\vec{r_1}, \vec{r_2})$ based on previous positions, and compare
+   $P_n$ the previous probability density and $P_{n+1}$ the current
+   probability density. If $P_{n+1} > P_n$, we accept the new
+   configuration, and calculate ∑
+
+   Each time we have a new pair of $\Psi \hat{H} \Psi$, we add them to
+   the existing values of each, followed by updating the value of total energy by:
+
+   #+BEGIN_SRC latex
+     \begin{equation}
+       E =\frac{ \sum\Psi \hat{H} \Psi}{\sum\Psi \Psi }
+     \end{equation}
+   #+END_SRC
+
+   When two values of $E$ differ smaller than a preset $\epsilon$, the loop terminates and we record a pair of $(r_{AB}, E)$.
+** Results
+
+   The plot of the pair $(r_{AB}, E)$ is presented in Figure
+   \ref{fig:rE}. It is observed that the minimum energy is achieved at
+   around $r_{AB} = 1a_0$, and the total energy is about $-1.4
+   \,\text{Hartree}$. Putting accuracy aside, the shape of the graph
+   presents a typical relation between energy and bond length where
+   the energy reaches a minimum at some points near Bohr radius. The
+   total energy approaches zero when the distance reaches infinity.
+
+
+   #+BEGIN_SRC latex
+     \begin{figure}[H]
+       \centering
+       \includegraphics[width=0.8\textwidth]{Q3.pdf}
+       \caption{Plot of total energy against distance between two atoms}
+       \label{fig:rE}
+     \end{figure}
+   #+END_SRC
+
+   To illustrate, we have selected data at $r_{AB} = 0.5 a_0, \;
+   r_{AB} = 1.0 a_0, \; r_{AB} = 8.0 a_0$ to plot the electron
+   cloud (Figure \ref{fig:0.5}, \ref{fig:1.0}, \ref{fig:8.0}). Clearly,
+   after a certain distance, electrons of the two protons will not
+   migrate to the other proton, thus giving us a configuration of two
+   separate hydrogen atoms.
+
+
+   #+BEGIN_SRC latex
+     \begin{figure}[H]
+       \centering
+       \includegraphics[width=0.6\textwidth]{05.png}
+       \caption{Electron cloud at r = 0.5 Bohr radius}
+       \label{fig:0.5}
+     \end{figure}
+   #+END_SRC
+
+   #+BEGIN_SRC latex
+     \begin{figure}[H]
+       \centering
+       \includegraphics[width=0.6\textwidth]{10.png}
+       \caption{Electron cloud at r = 1.0 Bohr radius}
+       \label{fig:1.0}
+     \end{figure}
+   #+END_SRC
+
+   #+BEGIN_SRC latex
+     \begin{figure}[H]
+       \centering
+       \includegraphics[width=0.6\textwidth]{80.png}
+       \caption{Electron cloud at r = 8.0 Bohr radius}
+       \label{fig:8.0}
+     \end{figure}
+   #+END_SRC
+* SRC
+
+  - =lab2_1.c=
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../lab2_1.c
+  #+END_SRC
+  \hline
+
+  - =lab2_2.c=
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../lab2_2.c
+  #+END_SRC
+  \hline
+
+  - =lab2_3.c=
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../lab2_3.c
+  #+END_SRC
+  \hline
+
+  - =lab2.h=
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../lab2.h
+  #+END_SRC
+  \hline

@@ -1,0 +1,15 @@
+A warm up is needed
+after giving the values, we run MC for several times before recording the results
+
+The resson is that, whatever initial condition we impose, the caes is not realistic. All 1/0 means T = 0. All random means T = inf
+
+Recommanded to discard 10% of the calculations
+
+One sweep is N times of computation, which corresponds to 1 flip for each site on average. 
+
+After each sweep, we record a total energy H, so that they can be used at the end of the MC.
+
+
+We need to compute the average spin and plot it agains T to find the critical temperature. Doing the same for heat capacity will have a different curve that is peaked at T_c.
+
+Each point should be calculated multiple times to give an estimate of the error.

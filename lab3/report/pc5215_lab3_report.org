@@ -1,0 +1,198 @@
+#+title: PC5215, Lab3
+#+author: Tiankai Xiong
+#+options: toc:nil
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER: \usepackage{tabularx,graphicx,ragged2e,booktabs,caption,float}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{gensymb}
+#+LATEX_HEADER: \usepackage{authblk}
+#+LATEX_HEADER: \setlength{\parskip}{0.2cm}
+#+LATEX_HEADER: \setlength{\parindent}{0.85cm}
+
+* Introduction
+
+  In this report, we demonstrate the study of specific heat capacity
+  and average spin of a graphene-like two dimensional lattice using
+  Ising model. Here we assume that there is no external magnetic
+  field. Hence the simplied Hamiltonian of the lattice is:
+
+  $$H(\sigma) = - \sum_{\langle i, j\rangle}J_{ij} \sigma_i \sigma_j$$
+
+  We calculate the specific heat capacity with formula:
+
+  $$c = \frac{1}{k_B T^2 N}(\langle E^2 \rangle - \langle E \rangle ^2)$$
+
+  The average spin will be simply:
+
+  $$s = |\frac{1}{N} \sum_i^N \sigma_i|$$
+
+* Method
+
+** Construction of lattice
+
+   The difference of a honeycomb lattice from a square lattice is that
+   not all sites are equivalent. Consequently, we should not simply
+   connect two sites at boundaries to create a continuous
+   lattice. Fortunately, we can utilize the concept of unit cell. To
+   illustrate, refer to Figure \ref{fig:graphene}. To construct
+   this two dimensional lattice, three indices are required: i and j
+   for row and column number of the unit cell, $k\in [0, 2)$ to index
+   the site within its unit cell. We have to thus create a three
+   dimensional array in c. This isn't difficult as it is simply an
+   extension of the construction of two dimensional arrays.
+
+   #+BEGIN_SRC latex
+     \begin{figure}[H]
+       \centering
+       \includegraphics[width = 0.7\textwidth]{figures/graphene.jpg}
+
+       \caption{Unit cells of a honeycomb lattice. (e.g. ABCD) While individual sites are not equivalent, all unit cells are equivalent. When we calculate spin interaction, we consider b_2 - P_2, b_1 - P_2, P_1 - P_2 \; for \; P_2 \; and \; X_1 - P_1, X_2 - P_1, P_2 - P_1 \; for \; P_2.}
+       \label{fig:graphene}
+     \end{figure}
+
+   #+END_SRC
+
+** One sweep over the lattice
+
+   We want to randomly select a site on the lattice. This can be
+   achieved by picking a random integer of $i \in [0, N)$, $j \in [0,
+   N)$ and $k \in [0, 2)$. To carry out Monte Carlo, Instead of
+   calculating the energies before and after the flip, we simply
+   calcualte the energy difference brought by such flip. Because each
+   site is connected to three other sites, and flipping one site only
+   affects its immediate neighbours, we only have to calculate the
+   energy before and after the flip in that particular
+   neighbourhood. (i.e. three site-site interactions) The probability
+   of any configuration is:
+
+   $$P(\sigma) = \frac{e^{-\beta H(\sigma)}}{Z}$$
+
+   where $Z$ is the normalization constant:
+
+   $$Z = \sum_{\sigma} e^{-\beta H(\sigma)}$$
+
+   and $\beta$ is the inverse temperature:
+
+   $$\beta = \frac{1}{k_B T}$$
+
+   Calculation the normalization constant would consume much
+   computational resources. Since what we really need is the ratio of
+   pabability before and after the flip:
+
+   $$\frac{P_2}{P_1} = e^{-\beta (H_2 - H_1)} = e^{-\beta \Delta H}$$
+
+   where the normalization constant is cancelled in the division. And
+   the only parameter we need to calculate the ratio of probability is
+   $\Delta H$ which is the change in energy by such flip.
+
+   Each time we choose a random site, we calculate the change in
+   energy hence the ratio of probability. If the ratio is greater than
+   1, we flip the site and continue. Else, we check it against a
+   random value between 0 and 1 and continue if it is greater than the
+   random value. After $N \times N \times 2$ attemps of flip, we
+   complete a sweep. At the end of each sweep, we calculate the total
+   energy and average spin.
+
+** Sweep for many times
+
+   We need to sweep the lattice for a large number of times so that we
+   collect enough data to calculate average values of energy (for heat
+   capacity) and average spin. The first 10% of sweeps are discarded
+   because the lattice has not approached the equilibrium state. Only
+   the rest of data are collected. At each temperature, one of such
+   calculated specific heat capacity and average spin is considered
+   one data point.
+
+** Multiple data points at each temperature
+
+   The above process is repeated at each temperature for at least 30
+   times so that the sample has statistical significance. We calculate
+   the corrected sample error from data by:
+
+   $$s = \sqrt{\frac{1}{N(N -1) } \sum_i^N (x_i - \bar{x})^2}$$
+
+   At each temperature, for both specific heat capacity and average
+   spin, we have a data point:
+
+   $$(\text{Temperature}\quad \text{mean value} \quad \text{corrected sample error})$$
+
+** Calculating for a range of temperature
+
+   We iterate with step = 0.1 from 0.1 to 5 dimensionless temperature.
+
+* Results
+
+  The plot of specific heat capacity and average spin against
+  dimensionless temperature is presented in Figure
+  \ref{fig:10_30_100}, \ref{fig:20_30_100}, \ref{fig:10_100_100}
+  and \ref{fig:10_30_1000}. The dimensionless critical temperature
+  $T_c$ is at around 1.5 units. For sqaure lattice, this value is at
+  about 2 units. This shows that phase transition of honeycomb lattice
+  happens at a lower temperature than square lattice.
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{figures/200_sites_100_iterations_30_samples.png}
+      \caption{200 sites, 30 samples, 100 iterations per data point}
+      \label{fig:10_30_100}
+    \end{figure}
+  #+END_SRC
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{figures/800_sites_100_iterations_30_samples.png}
+      \caption{800 sites, 30 samples, 100 iterations per data point}
+      \label{fig:20_30_100}
+    \end{figure}
+  #+END_SRC
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{figures/200_sites_100_iterations_100_samples.png}
+      \caption{200 sites, 100 samples, 100 iterations per data point}
+      \label{fig:10_100_100}
+    \end{figure}
+  #+END_SRC
+
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{figures/200_sites_1000_iterations_30_samples.png}
+      \caption{200 sites, 30 samples, 1000 iterations per data point}
+      \label{fig:10_30_1000}
+    \end{figure}
+  #+END_SRC
+
+
+* Discussion
+
+  At lower temperature, the equilibrium state is so that the lattice
+  is polarized thus we have a high average spin. On the contrary, at
+  high temperature, the access kinetic energy allows more flippings
+  thus renders the lattice non-polar. The transition between polar and
+  non-polar occurs at the critical temperature $T_c$
+
+  As for specific heat capacity, which depends on the standard
+  deviation of energy of the lattice, its value would be lower when
+  the lattice is far from phase transition as the equilibrium state is
+  achieved. However, at temperature near critical temperature where
+  phase transition occurs, the equilibrium state is not well defined
+  thus the fluctuation of total energy is large, contributing to a
+  large specific heat capacity.
+
+  The peak of specific heat capacity and the transition of average to
+  spin occur at the same dimensionless temperature, $T_c$.
+
+* SRC
+
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../lab3.c
+  #+END_SRC
+  \hline
