@@ -1,0 +1,204 @@
+#+title: PC5215, Lab4
+#+author: Tiankai Xiong
+#+options: toc:nil
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER: \usepackage{tabularx,graphicx,ragged2e,booktabs,caption,float}
+#+LATEX_HEADER: \usepackage[margin=0.8in]{geometry}
+#+LATEX_HEADER: \usepackage{amsmath}
+#+LATEX_HEADER: \usepackage{gensymb}
+#+LATEX_HEADER: \usepackage{authblk}
+#+LATEX_HEADER: \setlength{\parskip}{0.2cm}
+#+LATEX_HEADER: \setlength{\parindent}{0.85cm}
+
+* Part A
+
+  The problem of a one dimensional scattering over a potential barrier
+  has been well studied and the solutions are readily available. The
+  derivation is tedious and time-consuming which will not be presented
+  here. The solutions for transmission coefficient for a square
+  barrier with
+
+  $$V_1(x < 0) = 0, \quad V_1(0\leq x < a) = V_0, \quad V_1(x \geq a) = 0$$
+
+  is
+
+  $$T = |c|^2 = [1+ \frac{V_0^2 sinh^2(k_1 a)}{4E(V_0-E)}]^{-1}$$
+
+  for $E < V_0$, and
+
+  $$T = |c|^2 = [1+ \frac{V_0^2 sin^2(k_2 a)}{4E(E-V_0)}]^{-1}$$
+
+  for $E> V_0$ where $k_1 = \sqrt{2m(V_0-E)/\hbar^2}$, $k_2 = \sqrt{2m(E-V_0)/\hbar^2}$
+
+  The plot for transmission coefficient T for $E \in [0, 2eV]$ with
+  the square potential $V_0 = 1 eV$ is presented in Figure
+  \ref{fig:analytic}. It will serve as a reference for the following parts.
+
+  #+BEGIN_SRC latex
+    \begin{figure}[h]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{Analytic.pdf}
+      \caption{Transmission coefficient for square potential $V_0 = 1 eV$ with $E \in [0, 2 eV]$}
+      \label{fig:analytic}
+    \end{figure}
+  #+END_SRC
+
+* Part B
+
+** Theoretical approach
+   To study the same problem in a computational manner, we define an
+   1D wave packet concentrated at $(x_0, p_0)$
+
+   $$\Psi(x) \propto exp(-\frac{1}{2 \sigma^2}(x-x_0)^2 + \frac{i}{\hbar}p_0(x-x_0))$$
+
+   which propagates in the positive x direction.
+
+   The time evolution of the wave packet can be described as such
+
+   $$\Psi(t+\Delta t) = e^{-\frac{i}{\hbar} H \Delta t}$$
+
+   where the Hamiltonian is an operator
+
+   $$H = - \frac{\hbar^2}{2m} \frac{\partial^2}{\partial x^2} + V(x)$$
+
+   The two parts, represented at $A$ and $B$ respectively, do not
+   commute. However, Trotter-Suzuki formula
+
+   $$e^{A+B} \approx e^A e^B$$
+
+   allows us to evaluate the two parts separately. The partial
+   differentiation is the value of momentum in p space which could be
+   obtained via Fourier transformation.
+
+   The work flow for an evolution by $\Delta t$ is as follows:
+
+   $$(1)\quad \Psi(x, t) \to e^{-\frac{i}{\hbar}V(x) \Delta t}\Psi(x,t) = \Psi_{1/2}(x, t + \Delta t)$$
+   $$(2) \quad \Psi_{1/2}(x, t+\Delta t) \to \Psi_{1/2}(p, t+ \Delta t)$$
+   $$(3) \quad \Psi_{1/2}(p, t+\Delta t) \to e^{-\frac{i}{\hbar} \frac{p^2}{2m} \Delta t}\Psi_{1/2}(p, t + \Delta t) = \Psi(p, t + \Delta t)$$
+   $$(4) \quad \Psi(p, t+\Delta t) \to \Psi(x, t+\Delta t)$$
+
+   where the conversion between $\Psi(x, t)$ and $\Psi(p, t)$ is done via Fast Fourier Transform(FFT).
+
+
+** Implementation
+
+   The 1D space is indexed by discrete coordinates $x_i \in \{x_1
+   .. x_N\}$. We shift the coordinate such that $x_{N/2} = 0$ which
+   locates the potential barrier at the center of the space. When
+   transformed to $p$ space, it ranges from $p = 0$ to $p =
+   \frac{N}{2} \Delta p$, then from $p = -\frac{N}{2}\Delta p$ to
+   $-\Delta p$. $\Delta p$ is determined by the relation between $\Delta x$ and $\Delta p$
+
+   $$\frac{\Delta x \Delta p}{\hbar} = \frac{2\pi}{N}$$
+
+   We also need to define the spread of the wave packet which is
+   determined by the standard deviation $\sigma$. In our approach,
+   $\sigma = a$ is taken so that the original wave packet spans around
+   the same fraction in each of their spaces. The center of the wave
+   packet is at $x_0 = -5 \sigma$ so that it is essentially on the
+   left of the potential barrier in the initial state. The width of
+   the potential barrier, a, is chosen so that
+
+   $$\frac{\hbar^2}{2m a^2} = \frac{1}{100}eV$$
+
+   Without having to use any standard unit, we just define $V_0 = 1
+   eV$, $\hbar = 1$, $m = 1$ so that $a = 5\sqrt{2}$
+   and the units agree with each other.
+
+   We need to let the wave packet evolve so that in the case where
+   there is no potential barrier, it is entirely on the right hand
+   side of the non-existent barrier. This is ensured by having $t \times p_0 =
+   20a$ where $p_0$ assembles the group velocity of the wave packet.
+
+   The last step is to calculate transmission coefficient. This is
+   done by Monte Carlo method. We pick random sites from the x space
+   and only choose to evaluate it should it is has higher probability
+   density than the previous point, or the ratio of the probability
+   density at two points surpasses a random variable between 0 and 1.
+   At the end, we calculate the percentage of those that fall on the
+   right hand side of the potential barrier which would be the value
+   of transmission coefficient. 30 samples are taken for each
+   iteration to conduct statistical analysis.
+
+* Part C
+
+  This part is essentially the same as part B except that we need to
+  define the potential barrier in a inverted parabola fashion.
+
+* Results
+
+  Both potentials give a similar T-E curve as compared to the
+  analytical solution (Figure \ref{fig:T-E}). The arch shape or
+  inverted parabola potential barrier produces a curve that has a
+  higher transmission coefficient as compared to the flat block case.
+  This is due to the fact that while both potential barriers are equal
+  in height, the arch shaped is effectively "thinner" in width. The
+  wave packet thus have higher probability to propagate to the right
+  of if by tunneling. Although the curves look similar to the
+  analytical solution, they fail to predict the drop in transmission
+  coefficient between $E = 1$ and $E = 2$.
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\textwidth]{Transmission_coefficient.png}
+      \caption{Transmission coefficient at different energies}
+      \label{fig:T-E}
+    \end{figure}
+  #+END_SRC
+
+  To visualize the different cases, we have drawn probability
+  density graph for both cases at four representative energies.(Figure
+  \ref{fig:05}, \ref{fig:10}, \ref{fig:15}, \ref{fig:20}) At $E = 0.5
+  V_0$, the wave packet cannot bypass the barrier and is "bounced
+  back". At $E = V_0$, about half of the wave packet are able to
+  propagate to the other side while the rest returned to the left
+  again. As the energy increases, a larger percentage of the wave
+  packet propagates to the right. It is also interesting to note that
+  the original wave packet is more concentrate. It spreads out while
+  propagating.
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\textwidth]{case05.png}
+      \caption{Probability density of wave packet for block potential barrier $V_1$ and arch shape potential barrier $V_2$ at E = 0.5$V_0$}
+      \label{fig:05}
+    \end{figure}
+  #+END_SRC
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\textwidth]{case10.png}
+      \caption{Probability density of wave packet for block potential barrier $V_1$ and arch shape potential barrier $V_2$ at E = 1.0$V_0$}
+      \label{fig:10}
+    \end{figure}
+  #+END_SRC
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\textwidth]{case15.png}
+      \caption{Probability density of wave packet for block potential barrier $V_1$ and arch shape potential barrier $V_2$ at E = 1.5$V_0$}
+      \label{fig:15}
+    \end{figure}
+  #+END_SRC
+
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\textwidth]{case20.png}
+      \caption{Probability density of wave packet for block potential barrier $V_1$ and arch shape potential barrier $V_2$ at E = 2.0$V_0$}
+      \label{fig:20}
+    \end{figure}
+  #+END_SRC
+
+* SRC
+
+  \hline
+  #+BEGIN_SRC sh :exports results :results output
+    cat ../src/lab4_b.c
+  #+END_SRC
+  \hline
