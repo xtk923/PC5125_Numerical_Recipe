@@ -16,7 +16,7 @@
   In this report, we demonstrate the study of specific heat capacity
   and average spin of a graphene-like two dimensional lattice using
   Ising model. Here we assume that there is no external magnetic
-  field. Hence the simplied Hamiltonian of the lattice is:
+  field. Hence the simplified Hamiltonian of the lattice is:
 
   $$H(\sigma) = - \sum_{\langle i, j\rangle}J_{ij} \sigma_i \sigma_j$$
 
@@ -36,12 +36,12 @@
    not all sites are equivalent. Consequently, we should not simply
    connect two sites at boundaries to create a continuous
    lattice. Fortunately, we can utilize the concept of unit cell. To
-   illustrate, refer to Figure \ref{fig:graphene}. To construct
-   this two dimensional lattice, three indices are required: i and j
-   for row and column number of the unit cell, $k\in [0, 2)$ to index
-   the site within its unit cell. We have to thus create a three
-   dimensional array in c. This isn't difficult as it is simply an
-   extension of the construction of two dimensional arrays.
+   illustrate, refer to Figure \ref{fig:graphene}. To construct this
+   two dimensional lattice, three indices are required: i and j
+   respectively for row and column number of the unit cell, $k\in [0,
+   2)$ to index the site within its unit cell. We have to thus create
+   a three dimensional array in c. This isn't difficult as it is
+   simply an extension of the construction of two dimensional arrays.
 
    #+BEGIN_SRC latex
      \begin{figure}[H]
@@ -54,46 +54,70 @@
 
    #+END_SRC
 
+   Another concern is the initiation of lattice. Two candidate methods exists:
+
+   1. Initiate each site with random spin. i.e. -1 or +1
+   2. Initiate all sites with identical spin.
+
+   The first method will initiate a lattice at infinite temperature
+   while the second will initiate a lattice at absolute zero
+   temperature. When we iterate over such lattices at higher
+   temperature, both two lattices will approach their equilibrium
+   state after few sweeps. However, the difference is significant at
+   low temperature. For the second method, since the lattice is
+   initiated at zero absolute temperature, it is already at
+   equilibrium state and we face no problem. On the contrary, if we
+   initiate it with infinite temperature, it would be very hard for
+   the lattice to reach the equilibrium state at absolute zero
+   temperature. The reason is that, at very low temperature, the sites
+   are flipped solely depending on whether it will produce lower
+   energy. That is to say, it is solely decided by the random choice
+   while the other degree of randomness introduced by Metropolis
+   algorithm does not contribute significantly. Therefore, it would
+   take much more computational time to reach equilibrium state at
+   lower temperature. With the second method's advantage, we choose to
+   initiate the lattice with identical sites.
+
 ** One sweep over the lattice
 
    We want to randomly select a site on the lattice. This can be
    achieved by picking a random integer of $i \in [0, N)$, $j \in [0,
    N)$ and $k \in [0, 2)$. To carry out Monte Carlo, Instead of
    calculating the energies before and after the flip, we simply
-   calcualte the energy difference brought by such flip. Because each
+   calculate the energy difference brought by such flip. Because each
    site is connected to three other sites, and flipping one site only
-   affects its immediate neighbours, we only have to calculate the
-   energy before and after the flip in that particular
-   neighbourhood. (i.e. three site-site interactions) The probability
-   of any configuration is:
+   affects its immediate neighbors, we only have to calculate the
+   energies before and after the flip in that particular
+   neighborhood. (i.e. three site-site interactions) The probability
+   of any configuration is
 
    $$P(\sigma) = \frac{e^{-\beta H(\sigma)}}{Z}$$
 
-   where $Z$ is the normalization constant:
+   where $Z$ is the normalization constant
 
    $$Z = \sum_{\sigma} e^{-\beta H(\sigma)}$$
 
-   and $\beta$ is the inverse temperature:
+   and $\beta$ is the inverse temperature
 
    $$\beta = \frac{1}{k_B T}$$
 
-   Calculation the normalization constant would consume much
+   Calculating the normalization constant would consume much
    computational resources. Since what we really need is the ratio of
-   pabability before and after the flip:
+   probability before and after the flip
 
    $$\frac{P_2}{P_1} = e^{-\beta (H_2 - H_1)} = e^{-\beta \Delta H}$$
 
-   where the normalization constant is cancelled in the division. And
-   the only parameter we need to calculate the ratio of probability is
+   where the normalization constant is canceled in the division. The
+   only parameter we need to calculate the ratio of probability is
    $\Delta H$ which is the change in energy by such flip.
 
    Each time we choose a random site, we calculate the change in
    energy hence the ratio of probability. If the ratio is greater than
-   1, we flip the site and continue. Else, we check it against a
+   1, we flip the site and continue. Otherwise, we check it against a
    random value between 0 and 1 and continue if it is greater than the
-   random value. After $N \times N \times 2$ attemps of flip, we
-   complete a sweep. At the end of each sweep, we calculate the total
-   energy and average spin.
+   random value. After $N \times N \times 2$ attempts of flip, we
+   complete a sweep as each site is visited once on average. At the
+   end of each sweep, we calculate the total energy and the average spin.
 
 ** Sweep for many times
 
@@ -105,18 +129,24 @@
    calculated specific heat capacity and average spin is considered
    one data point.
 
+
 ** Multiple data points at each temperature
 
    The above process is repeated at each temperature for at least 30
-   times so that the sample has statistical significance. We calculate
-   the corrected sample error from data by:
+   times so that the sample has statistical significance. In order to
+   make each data point independent of each other, we re-initiate the
+   lattice before each iteration. We calculate the corrected sample
+   error from data by:
 
    $$s = \sqrt{\frac{1}{N(N -1) } \sum_i^N (x_i - \bar{x})^2}$$
 
    At each temperature, for both specific heat capacity and average
-   spin, we have a data point:
+   spin, we have a data point
 
    $$(\text{Temperature}\quad \text{mean value} \quad \text{corrected sample error})$$
+
+   which allows us to plot the specific heat capacity/average spin
+   against dimensionless temperature with error bars.
 
 ** Calculating for a range of temperature
 
@@ -126,11 +156,12 @@
 
   The plot of specific heat capacity and average spin against
   dimensionless temperature is presented in Figure
-  \ref{fig:10_30_100}, \ref{fig:20_30_100}, \ref{fig:10_100_100}
-  and \ref{fig:10_30_1000}. The dimensionless critical temperature
-  $T_c$ is at around 1.5 units. For sqaure lattice, this value is at
-  about 2 units. This shows that phase transition of honeycomb lattice
-  happens at a lower temperature than square lattice.
+  \ref{fig:10_30_100}, \ref{fig:20_30_100}, \ref{fig:10_100_100},
+  \ref{fig:10_30_1000} and \ref{fig:100_30_100}. The dimensionless
+  critical temperature $T_c$ is at around 1.5 units. For square
+  lattice, this value is at about 2 units. This shows that phase
+  transition of honeycomb lattice happens at a lower temperature than
+  square lattice.
 
   #+BEGIN_SRC latex
     \begin{figure}[H]
@@ -170,13 +201,22 @@
   #+END_SRC
 
 
+  #+BEGIN_SRC latex
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width = 0.7\textwidth]{figures/20000_sites_100_iterations_30_samples.png}
+      \caption{20000 sites, 30 samples, 100 iterations per data point}
+      \label{fig:100_30_100}
+    \end{figure}
+  #+END_SRC
+
 * Discussion
 
   At lower temperature, the equilibrium state is so that the lattice
   is polarized thus we have a high average spin. On the contrary, at
-  high temperature, the access kinetic energy allows more flippings
-  thus renders the lattice non-polar. The transition between polar and
-  non-polar occurs at the critical temperature $T_c$
+  high temperature, the access kinetic energy allows more flips thus
+  renders the lattice non-polar. The transition between polar and
+  non-polar occurs at the critical temperature $T_c$.
 
   As for specific heat capacity, which depends on the standard
   deviation of energy of the lattice, its value would be lower when
@@ -188,6 +228,9 @@
 
   The peak of specific heat capacity and the transition of average to
   spin occur at the same dimensionless temperature, $T_c$.
+
+  When we increase the lattice size, the peak of specific heat
+  capacity increases. This is a result of increasing total energy.
 
 * SRC
 
